@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CipherLab — Classical Cryptography Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00ffc8;
+    --accent2: #7b5ea7;
+    --accent3: #ff6b35;
+    --text: #e8e8f0;
+    --muted: #6a6a8a;
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Bebas Neue', sans-serif;
+    --body: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,200,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,200,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orb */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(123,94,167,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Header */
+  header {
+    padding: 40px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+  }
+
+  .logo {
+    font-family: var(--display);
+    font-size: 64px;
+    letter-spacing: 4px;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(0,255,200,0.3);
+  }
+
+  .logo span {
+    color: var(--text);
+    opacity: 0.3;
+  }
+
+  .tagline {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+  }
+
+  /* Algorithm selector */
+  .algo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-bottom: 40px;
+  }
+
+  .algo-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .algo-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .algo-btn span { position: relative; z-index: 1; }
+
+  .algo-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .algo-btn:hover::before { opacity: 0.08; }
+
+  .algo-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,255,200,0.05);
+  }
+
+  .algo-btn.active::before { opacity: 0.1; }
+
+  /* Section label */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* Main panel */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
+  }
+
+  .panel-title {
+    font-family: var(--display);
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .panel-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  /* Form elements */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-row.single { grid-template-columns: 1fr; }
+  .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  textarea, input[type="text"], input[type="number"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    resize: vertical;
+  }
+
+  textarea { min-height: 100px; }
+
+  textarea:focus, input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(0,255,200,0.1);
+  }
+
+  /* Mode toggle */
+  .mode-toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mode-btn:first-child { border-right: none; }
+
+  .mode-btn.active {
+    background: rgba(0,255,200,0.1);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* Execute button */
+  .execute-btn {
+    background: var(--accent);
+    border: none;
+    color: #000;
+    font-family: var(--display);
+    font-size: 20px;
+    letter-spacing: 3px;
+    padding: 16px 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .execute-btn:hover {
+    background: #fff;
+    box-shadow: 0 0 30px rgba(0,255,200,0.4);
+    transform: translateY(-1px);
+  }
+
+  .execute-btn:active { transform: translateY(0); }
+
+  .execute-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  /* Output panel */
+  .output-panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-top: 24px;
+    min-height: 80px;
+    position: relative;
+    transition: all 0.3s;
+  }
+
+  .output-panel.has-result { border-color: rgba(0,255,200,0.3); }
+
+  .output-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .output-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .output-text {
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--accent);
+    word-break: break-all;
+    line-height: 1.6;
+    min-height: 24px;
+  }
+
+  .output-text.error { color: var(--accent3); }
+
+  .copy-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    display: none;
+  }
+
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.show { display: block; }
+
+  /* Info tags */
+  .info-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .tag.type-symmetric { border-color: rgba(0,255,200,0.3); color: var(--accent); }
+  .tag.type-classical { border-color: rgba(123,94,167,0.4); color: var(--accent2); }
+  .tag.type-transposition { border-color: rgba(255,107,53,0.4); color: var(--accent3); }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+
+  /* Scanline animation */
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+
+  .output-panel::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,255,200,0.15), transparent);
+    animation: scanline 3s linear infinite;
+    pointer-events: none;
+  }
+
+  /* Algo info */
+  .algo-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .info-cell {
+    background: var(--surface);
+    padding: 16px 20px;
+  }
+
+  .info-cell-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .info-cell-value {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 0;
+    margin-top: 60px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  @media (max-width: 640px) {
+    .form-row, .form-row.triple { grid-template-columns: 1fr; }
+    .logo { font-size: 42px; }
+    .algo-grid { grid-template-columns: repeat(3, 1fr); }
+    .algo-info { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="logo">CIPHER<span>LAB</span></div>
+      <div class="tagline">// Classical Cryptography Suite — 9 Algorithms</div>
+    </div>
+  </header>
+
+  <div class="section-label">// Select Algorithm</div>
+  <div class="algo-grid">
+    <button class="algo-btn active" data-algo="caesar" onclick="selectAlgo(this)"><span>Caesar</span></button>
+    <button class="algo-btn" data-algo="autokey" onclick="selectAlgo(this)"><span>Auto Key</span></button>
+    <button class="algo-btn" data-algo="vigenere" onclick="selectAlgo(this)"><span>Vigenère</span></button>
+    <button class="algo-btn" data-algo="playfair" onclick="selectAlgo(this)"><span>Playfair</span></button>
+    <button class="algo-btn" data-algo="hill" onclick="selectAlgo(this)"><span>Hill Cipher</span></button>
+    <button class="algo-btn" data-algo="monoalphabetic" onclick="selectAlgo(this)"><span>Monoalpha</span></button>
+    <button class="algo-btn" data-algo="railfence" onclick="selectAlgo(this)"><span>Rail Fence</span></button>
+    <button class="algo-btn" data-algo="rowtransposition" onclick="selectAlgo(this)"><span>Row Transpos.</span></button>
+    <button class="algo-btn" data-algo="des" onclick="selectAlgo(this)"><span>DES</span></button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title" id="algo-title">CAESAR CIPHER</div>
+    <div class="panel-desc" id="algo-desc">Shifts each letter by a fixed number of positions in the alphabet. One of the oldest and simplest substitution ciphers.</div>
+
+    <!-- Mode toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-encode" onclick="setMode('encode')">// ENCODE</button>
+      <button class="mode-btn" id="mode-decode" onclick="setMode('decode')">// DECODE</button>
+    </div>
+
+    <!-- Dynamic fields -->
+    <div id="fields-container"></div>
+
+    <!-- Input text -->
+    <div class="form-row single" style="margin-bottom:16px;">
+      <div class="form-group">
+        <label>Input Text</label>
+        <textarea id="input-text" placeholder="Enter your message here..."></textarea>
+      </div>
+    </div>
+
+    <button class="execute-btn" id="exec-btn" onclick="execute()">EXECUTE</button>
+
+    <!-- Output -->
+    <div class="output-panel" id="output-panel">
+      <div class="output-label">Output</div>
+      <div class="output-text" id="output-text">Awaiting input...</div>
+      <button class="copy-btn" id="copy-btn" onclick="copyResult()">Copy</button>
+    </div>
+
+    <div class="info-tags" id="info-tags"></div>
+  </div>
+
+  <footer>CIPHERLAB &mdash; CRYPTOGRAPHY SUITE &mdash; ALL ALGORITHMS IMPLEMENTED IN PYTHON</footer>
+</div>
+
+<script>
+const ALGOS = {
+  caesar: {
+    title: 'CAESAR CIPHER',
+    desc: 'Shifts each letter by a fixed number of positions in the alphabet. One of the oldest and simplest substitution ciphers.',
+    type: 'classical',
+    typeLabel: 'Substitution',
+    keyRequired: false,
+    fields: [
+      { id: 'shift', label: 'Shift Amount', type: 'number', placeholder: '3', default: '3', extra: true }
+    ]
+  },
+  autokey: {
+    title: 'AUTO-KEY CIPHER',
+    desc: 'A polyalphabetic cipher where the key is derived from the plaintext itself after an initial keyword.',
+    type: 'classical',
+    typeLabel: 'Polyalphabetic',
+    keyRequired: true,
+    fields: [
+      { id: 'key', label: 'Key', type: 'text', placeholder: 'e.g. QUEENLY', default: '' }
+    ]
+  },
+  vigenere: {
+    title: 'VIGENÈRE CIPHER',
+    desc: 'A polyalphabetic substitution cipher using a keyword to shift letters, significantly stronger than Caesar.',
+    type: 'classical',
+    typeLabel: 'Polyalphabetic',
+    keyRequired: true,
+    fields: [
+      { id: 'key', label: 'Keyword', type: 'text', placeholder: 'e.g. SECRET', default: '' }
+    ]
+  },
+  playfair: {
+    title: 'PLAYFAIR CIPHER',
+    desc: 'Encrypts pairs of letters using a 5×5 key matrix. The first practical digraph substitution cipher.',
+    type: 'classical',
+    typeLabel: 'Digraph Substitution',
+    keyRequired: true,
+    fields: [
+      { id: 'key', label: 'Keyword', type: 'text', placeholder: 'e.g. MONARCHY', default: 'MONARCHY' }
+    ]
+  },
+  hill: {
+    title: 'HILL CIPHER',
+    desc: 'A polygraphic cipher using linear algebra. Encrypts blocks of letters via matrix multiplication modulo 26.',
+    type: 'classical',
+    typeLabel: 'Polygraphic',
+    keyRequired: true,
+    fields: [
+      { id: 'key', label: 'Key Matrix (as text)', type: 'text', placeholder: 'e.g. GYBNQKURP', default: 'GYBNQKURP' }
+    ]
+  },
+  monoalphabetic: {
+    title: 'MONOALPHABETIC CIPHER',
+    desc: 'Maps each letter to a fixed substitute using a shuffled alphabet. Simple but vulnerable to frequency analysis.',
+    type: 'classical',
+    typeLabel: 'Substitution',
+    keyRequired: false,
+    fields: []
+  },
+  railfence: {
+    title: 'RAIL FENCE CIPHER',
+    desc: 'A transposition cipher that writes text in a zigzag pattern across multiple "rails" then reads off row by row.',
+    type: 'transposition',
+    typeLabel: 'Transposition',
+    keyRequired: false,
+    fields: [
+      { id: 'rails', label: 'Number of Rails', type: 'number', placeholder: '3', default: '3', extra: true }
+    ]
+  },
+  rowtransposition: {
+    title: 'ROW TRANSPOSITION',
+    desc: 'Writes plaintext into rows and reads columns in a key-specified order. A classic transposition technique.',
+    type: 'transposition',
+    typeLabel: 'Transposition',
+    keyRequired: true,
+    fields: [
+      { id: 'key', label: 'Key (digits or word)', type: 'text', placeholder: 'e.g. 4312567', default: '4312567' }
+    ]
+  },
+  des: {
+    title: 'DES ALGORITHM',
+    desc: 'Data Encryption Standard — a symmetric-key block cipher. Processes 64-bit blocks with a 64-bit hex key. Note: plaintext must contain letters only (spaces are stripped automatically; digits and symbols are not supported).',
+    type: 'symmetric',
+    typeLabel: 'Block Cipher',
+    keyRequired: true,
+    modeNote: 'Encode only',
+    fields: [
+      { id: 'key', label: 'Key (Hex or Alpha)', type: 'text', placeholder: 'e.g. 133457799BBCDFF1', default: '133457799BBCDFF1' }
+    ]
+  }
+};
+
+let currentAlgo = 'caesar';
+let currentMode = 'encode';
+
+function selectAlgo(btn) {
+  document.querySelectorAll('.algo-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentAlgo = btn.dataset.algo;
+  renderAlgo();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-encode').classList.toggle('active', mode === 'encode');
+  document.getElementById('mode-decode').classList.toggle('active', mode === 'decode');
+}
+
+function renderAlgo() {
+  const algo = ALGOS[currentAlgo];
+  document.getElementById('algo-title').textContent = algo.title;
+  document.getElementById('algo-desc').textContent = algo.desc;
+
+  // Tags
+  const tagMap = { classical: 'type-classical', symmetric: 'type-symmetric', transposition: 'type-transposition' };
+  document.getElementById('info-tags').innerHTML = `
+    <span class="tag ${tagMap[algo.type] || ''}">${algo.typeLabel}</span>
+    ${algo.modeNote ? `<span class="tag">${algo.modeNote}</span>` : ''}
+  `;
+
+  // Fields
+  const container = document.getElementById('fields-container');
+  if (algo.fields.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = `<div class="form-row" style="margin-bottom:16px;">
+    ${algo.fields.map(f => `
+      <div class="form-group">
+        <label>${f.label}</label>
+        <input type="${f.type}" id="field-${f.id}" placeholder="${f.placeholder}" value="${f.default}">
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+async function execute() {
+  const algo = ALGOS[currentAlgo];
+  const text = document.getElementById('input-text').value.trim();
+  if (!text) { showOutput('Please enter some text.', true); return; }
+
+  const payload = { algorithm: currentAlgo, mode: currentMode, text, key: '', extra: {} };
+
+  // Collect fields
+  algo.fields.forEach(f => {
+    const val = document.getElementById(`field-${f.id}`)?.value || f.default;
+    if (f.extra) payload.extra[f.id] = val;
+    else payload[f.id] = val;
+  });
+
+  const btn = document.getElementById('exec-btn');
+  btn.classList.add('loading');
+  btn.innerHTML = 'PROCESSING <span class="spinner"></span>';
+
+  try {
+    const res = await fetch('/api/cipher', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.error) showOutput('ERROR: ' + data.error, true);
+    else showOutput(data.result, false);
+  } catch (e) {
+    showOutput('Connection error: ' + e.message, true);
+  } finally {
+    btn.classList.remove('loading');
+    btn.innerHTML = 'EXECUTE';
+  }
+}
+
+function showOutput(text, isError) {
+  const out = document.getElementById('output-text');
+  const panel = document.getElementById('output-panel');
+  const copyBtn = document.getElementById('copy-btn');
+  out.textContent = text;
+  out.className = 'output-text' + (isError ? ' error' : '');
+  panel.className = 'output-panel' + (!isError ? ' has-result' : '');
+  copyBtn.className = 'copy-btn' + (!isError ? ' show' : '');
+}
+
+function copyResult() {
+  const text = document.getElementById('output-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// Allow Ctrl+Enter to execute
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') execute();
+});
+
+// Init
+renderAlgo();
+</script>
+</body>
+</html>

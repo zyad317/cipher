@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CipherLab — Codex Cryptographicus</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#b8860b;--gold2:#d4a017;--gold3:#f0c040;
+  --aged:#8b6914;--crimson:#7a1a1a;
+}
+body{
+  background:#0e0a04;
+  font-family:'IM Fell English',serif;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;position:relative;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(1px 1px at 10% 15%, rgba(255,220,100,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 40%, rgba(255,220,100,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 10%, rgba(255,220,100,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 30%, rgba(255,220,100,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 60%, rgba(255,220,100,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 20%, rgba(255,220,100,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 70%, rgba(255,220,100,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 80%, rgba(255,220,100,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 90%, rgba(255,220,100,0.4) 0%, transparent 100%),
+    radial-gradient(2px 2px at 75% 85%, rgba(255,220,100,0.3) 0%, transparent 100%),
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(70,30,0,0.8) 0%, transparent 60%),
+    #0e0a04;
+  pointer-events:none;z-index:0;
+}
+.wrap{position:relative;z-index:1;width:100%;max-width:780px;padding:40px 24px 60px;}
+
+.header{text-align:center;margin-bottom:36px;}
+.eyebrow{font-family:'Cinzel',serif;font-size:10px;letter-spacing:6px;color:var(--aged);text-transform:uppercase;margin-bottom:8px;}
+.title{font-family:'Cinzel Decorative',serif;font-size:42px;font-weight:700;color:var(--gold3);line-height:1.1;text-shadow:0 0 40px rgba(212,160,23,0.5),0 2px 4px rgba(0,0,0,0.8);margin-bottom:4px;}
+.subtitle{font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:var(--aged);text-transform:uppercase;}
+.ornament{display:flex;align-items:center;gap:12px;margin:16px 0;}
+.ornament-line{flex:1;height:1px;background:linear-gradient(90deg, transparent, var(--gold), transparent);}
+.ornament-glyph{color:var(--gold);font-size:18px;}
+
+.grimoire{
+  background:linear-gradient(160deg,#2a1a08 0%,#1a0f04 40%,#0f0800 100%);
+  border:1px solid var(--gold);position:relative;
+  padding:28px 28px 32px;
+  box-shadow:0 0 60px rgba(184,134,11,0.15),inset 0 0 40px rgba(0,0,0,0.6);
+}
+.grimoire::before,.grimoire::after{content:'';position:absolute;width:24px;height:24px;border-color:var(--gold2);border-style:solid;}
+.grimoire::before{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+.grimoire::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+.corner-tr,.corner-bl{position:absolute;width:24px;height:24px;border-color:var(--gold2);border-style:solid;}
+.corner-tr{top:-1px;right:-1px;border-width:2px 2px 0 0;}
+.corner-bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px;}
+.inner-border{position:absolute;inset:8px;border:1px solid rgba(184,134,11,0.2);pointer-events:none;}
+
+.scroll-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:4px;color:var(--aged);text-transform:uppercase;text-align:center;margin-bottom:12px;}
+.algo-scroll{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:24px;}
+.algo-rune{
+  background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.25);
+  color:var(--aged);font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:1px;
+  text-transform:uppercase;padding:10px 6px;cursor:pointer;text-align:center;
+  transition:all 0.25s;line-height:1.3;
+}
+.algo-rune:hover{border-color:var(--gold2);color:var(--gold3);background:rgba(184,134,11,0.12);}
+.algo-rune.chosen{border-color:var(--gold);color:var(--gold3);background:rgba(184,134,11,0.18);box-shadow:inset 0 0 12px rgba(184,134,11,0.1),0 0 8px rgba(184,134,11,0.15);}
+.algo-rune .rune-num{display:block;font-size:16px;margin-bottom:4px;opacity:0.7;}
+
+.mode-row{display:flex;margin-bottom:20px;border:1px solid rgba(184,134,11,0.3);}
+.mode-switch{flex:1;background:transparent;border:none;color:var(--aged);font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:11px;cursor:pointer;transition:all 0.2s;}
+.mode-switch:first-child{border-right:1px solid rgba(184,134,11,0.3);}
+.mode-switch.lit{background:rgba(184,134,11,0.15);color:var(--gold3);}
+
+.parchment-info{background:rgba(245,234,216,0.05);border-left:2px solid var(--gold);padding:10px 14px;margin-bottom:20px;}
+.algo-name-display{font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;color:var(--gold2);text-transform:uppercase;margin-bottom:3px;}
+.algo-desc-display{font-family:'IM Fell English',serif;font-style:italic;font-size:12px;color:rgba(245,234,216,0.5);line-height:1.5;}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.field-row.full{grid-template-columns:1fr;}
+.field-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:var(--aged);text-transform:uppercase;display:block;margin-bottom:6px;}
+textarea,input[type=text],input[type=number]{
+  width:100%;background:rgba(0,0,0,0.5);border:1px solid rgba(184,134,11,0.35);
+  color:rgba(245,234,216,0.85);font-family:'IM Fell English',serif;font-size:13px;
+  padding:10px 13px;outline:none;transition:border-color 0.2s;resize:vertical;
+}
+textarea{min-height:90px;}
+textarea:focus,input:focus{border-color:var(--gold2);}
+textarea::placeholder,input::placeholder{color:rgba(184,134,11,0.3);font-style:italic;}
+
+.seal-btn{
+  display:block;width:100%;
+  background:linear-gradient(180deg,rgba(184,134,11,0.25) 0%,rgba(184,134,11,0.1) 100%);
+  border:1px solid var(--gold);color:var(--gold3);font-family:'Cinzel',serif;
+  font-size:12px;letter-spacing:5px;text-transform:uppercase;padding:14px;
+  cursor:pointer;transition:all 0.25s;margin-top:4px;
+}
+.seal-btn:hover{background:linear-gradient(180deg,rgba(184,134,11,0.4) 0%,rgba(184,134,11,0.2) 100%);box-shadow:0 0 20px rgba(184,134,11,0.2);}
+.seal-btn:active{transform:scale(0.99);}
+.seal-btn.casting{opacity:0.7;pointer-events:none;}
+
+.codex{margin-top:20px;background:rgba(0,0,0,0.4);border:1px solid rgba(184,134,11,0.2);padding:16px 18px;min-height:64px;position:relative;}
+.codex-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:4px;color:rgba(184,134,11,0.5);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.codex-label::after{content:'';flex:1;height:1px;background:rgba(184,134,11,0.15);}
+.codex-text{font-family:'IM Fell English',serif;font-size:15px;color:var(--gold2);word-break:break-all;line-height:1.7;min-height:22px;}
+.codex-text.cursed{color:var(--crimson);font-style:italic;}
+.copy-seal{
+  position:absolute;top:12px;right:12px;
+  background:rgba(184,134,11,0.1);border:1px solid rgba(184,134,11,0.25);
+  color:rgba(184,134,11,0.6);font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;
+  padding:5px 10px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;display:none;
+}
+.copy-seal.visible{display:block;}
+.copy-seal:hover{color:var(--gold3);border-color:var(--gold);}
+.sigil-footer{text-align:center;margin-top:28px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:rgba(184,134,11,0.25);text-transform:uppercase;}
+@keyframes flicker{0%,100%{opacity:1}50%{opacity:0.6}}
+.casting-text{animation:flicker 0.6s ease-in-out infinite;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="eyebrow">Codex Cryptographicus</div>
+    <div class="title">CipherLab</div>
+    <div class="subtitle">The Arcane Art of Secret Writing</div>
+    <div class="ornament">
+      <div class="ornament-line"></div>
+      <div class="ornament-glyph">✦</div>
+      <div class="ornament-line"></div>
+    </div>
+  </div>
+
+  <div class="grimoire">
+    <div class="corner-tr"></div>
+    <div class="corner-bl"></div>
+    <div class="inner-border"></div>
+
+    <div class="scroll-label">— Choose thy cipher —</div>
+    <div class="algo-scroll">
+      <button class="algo-rune chosen" data-algo="caesar" onclick="pickAlgo(this)"><span class="rune-num">Ⅰ</span>Caesar</button>
+      <button class="algo-rune" data-algo="autokey" onclick="pickAlgo(this)"><span class="rune-num">Ⅱ</span>Auto Key</button>
+      <button class="algo-rune" data-algo="vigenere" onclick="pickAlgo(this)"><span class="rune-num">Ⅲ</span>Vigenère</button>
+      <button class="algo-rune" data-algo="playfair" onclick="pickAlgo(this)"><span class="rune-num">Ⅳ</span>Playfair</button>
+      <button class="algo-rune" data-algo="hill" onclick="pickAlgo(this)"><span class="rune-num">Ⅴ</span>Hill Cipher</button>
+      <button class="algo-rune" data-algo="monoalphabetic" onclick="pickAlgo(this)"><span class="rune-num">Ⅵ</span>Monoalpha</button>
+      <button class="algo-rune" data-algo="railfence" onclick="pickAlgo(this)"><span class="rune-num">Ⅶ</span>Rail Fence</button>
+      <button class="algo-rune" data-algo="rowtransposition" onclick="pickAlgo(this)"><span class="rune-num">Ⅷ</span>Row Trans.</button>
+      <button class="algo-rune" data-algo="des" onclick="pickAlgo(this)"><span class="rune-num">Ⅸ</span>DES</button>
+    </div>
+
+    <div class="parchment-info">
+      <div class="algo-name-display" id="algo-name">Caesar Cipher</div>
+      <div class="algo-desc-display" id="algo-desc">Shifts each letter by a fixed number of positions. One of the oldest known ciphers, used by Julius Caesar himself in his private correspondence.</div>
+    </div>
+
+    <div class="mode-row">
+      <button class="mode-switch lit" id="btn-encode" onclick="setMode('encode')">✦ Encipher</button>
+      <button class="mode-switch" id="btn-decode" onclick="setMode('decode')">✧ Decipher</button>
+    </div>
+
+    <div id="dyn-fields"></div>
+
+    <div class="field-row full" style="margin-bottom:14px">
+      <label class="field-label">Thine Message</label>
+      <textarea id="inp-text" placeholder="Write thy secret words here..."></textarea>
+    </div>
+
+    <button class="seal-btn" id="cast-btn" onclick="castSpell()">⬡ Cast the Cipher ⬡</button>
+
+    <div class="codex">
+      <div class="codex-label">The Revelation</div>
+      <div class="codex-text" id="codex-out">Awaiting the incantation…</div>
+      <button class="copy-seal" id="copy-seal" onclick="copyOut()">Copy</button>
+    </div>
+  </div>
+
+  <div class="sigil-footer">✦ &nbsp; Nine Ciphers of the Ancient World &nbsp; ✦</div>
+</div>
+
+<script>
+const ALGOS={
+  caesar:{name:'Caesar Cipher',desc:'Shifts each letter by a fixed number of positions. One of the oldest known ciphers, used by Julius Caesar himself in his private correspondence.',fields:[{id:'shift',label:'Shift Number',type:'number',ph:'3',def:'3',extra:true}]},
+  autokey:{name:'Auto-Key Cipher',desc:'A polyalphabetic cipher wherein the key extends itself using the plaintext — a self-referential enchantment of great cunning.',fields:[{id:'key',label:'The Key-Word',type:'text',ph:'e.g. QUEENLY',def:''}]},
+  vigenere:{name:'Vigenère Cipher',desc:'Named for Blaise de Vigenère, this polyalphabetic cipher repeats a keyword to shift letters — the cipher of kings and diplomats.',fields:[{id:'key',label:'The Key-Word',type:'text',ph:'e.g. SECRET',def:''}]},
+  playfair:{name:'Playfair Cipher',desc:'Encrypts digraphs — pairs of letters — through a mystical 5×5 matrix derived from the keyword. Devised by Charles Wheatstone in 1854.',fields:[{id:'key',label:'The Key-Word',type:'text',ph:'e.g. MONARCHY',def:'MONARCHY'}]},
+  hill:{name:'Hill Cipher',desc:'Employs the dark art of linear algebra — matrix multiplication modulo 26 — to encipher blocks of letters simultaneously.',fields:[{id:'key',label:'Key Matrix (as letters)',type:'text',ph:'e.g. GYBNQKURP',def:'GYBNQKURP'}]},
+  monoalphabetic:{name:'Monoalphabetic Cipher',desc:'Maps each letter to a unique substitute from a shuffled alphabet. Simple yet deceptive — vulnerable only to the patient cryptanalyst.',fields:[]},
+  railfence:{name:'Rail Fence Cipher',desc:'Writes the message in a serpentine zigzag across rails, then reads off each rail in turn — a transposition of elegant geometry.',fields:[{id:'rails',label:'Number of Rails',type:'number',ph:'3',def:'3',extra:true}]},
+  rowtransposition:{name:'Row Transposition',desc:'Arranges the plaintext into rows and reads the columns in an order prescribed by the key — geometry concealing meaning.',fields:[{id:'key',label:'The Key (digits or word)',type:'text',ph:'e.g. 4312567',def:'4312567'}]},
+  des:{name:'DES Algorithm',desc:'The Data Encryption Standard — a symmetric block cipher of great mechanical complexity. Accepts letters only; spaces are stripped automatically. Enciphers only.',fields:[{id:'key',label:'Key (Hex or Alpha)',type:'text',ph:'e.g. 133457799BBCDFF1',def:'133457799BBCDFF1'}],encodeOnly:true}
+};
+let algo='caesar',mode='encode';
+function pickAlgo(btn){document.querySelectorAll('.algo-rune').forEach(b=>b.classList.remove('chosen'));btn.classList.add('chosen');algo=btn.dataset.algo;renderAlgo();}
+function setMode(m){mode=m;document.getElementById('btn-encode').classList.toggle('lit',m==='encode');document.getElementById('btn-decode').classList.toggle('lit',m==='decode');}
+function renderAlgo(){
+  const a=ALGOS[algo];
+  document.getElementById('algo-name').textContent=a.name;
+  document.getElementById('algo-desc').textContent=a.desc;
+  const f=document.getElementById('dyn-fields');
+  if(!a.fields.length){f.innerHTML='';return;}
+  f.innerHTML=`<div class="field-row ${a.fields.length===1?'full':''}" style="margin-bottom:14px">${a.fields.map(x=>`<div><label class="field-label">${x.label}</label><input type="${x.type}" id="f-${x.id}" placeholder="${x.ph}" value="${x.def}"></div>`).join('')}</div>`;
+}
+async function castSpell(){
+  const text=document.getElementById('inp-text').value.trim();
+  if(!text){showOut('The scroll is blank — write thy message first.',true);return;}
+  const btn=document.getElementById('cast-btn');
+  btn.classList.add('casting');btn.innerHTML='<span class="casting-text">⬡ The spirits deliberate… ⬡</span>';
+  const a=ALGOS[algo];
+  const payload={algorithm:algo,mode,text,key:'',extra:{}};
+  a.fields.forEach(x=>{const v=document.getElementById(`f-${x.id}`)?.value||x.def;if(x.extra)payload.extra[x.id]=v;else payload.key=v;});
+  try{
+    const res=await fetch('/api/cipher',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await res.json();
+    if(d.error)showOut('✘ '+d.error,true);else showOut(d.result,false);
+  }catch(e){showOut('The spirits cannot be reached: '+e.message,true);}
+  finally{btn.classList.remove('casting');btn.innerHTML='⬡ Cast the Cipher ⬡';}
+}
+function showOut(txt,err){
+  const o=document.getElementById('codex-out'),cp=document.getElementById('copy-seal');
+  o.textContent=txt;o.className='codex-text'+(err?' cursed':'');
+  cp.className='copy-seal'+(err?'':' visible');
+}
+function copyOut(){
+  navigator.clipboard.writeText(document.getElementById('codex-out').textContent).then(()=>{
+    const b=document.getElementById('copy-seal');b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1500);
+  });
+}
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')castSpell();});
+renderAlgo();
+</script>
+</body>
+</html>

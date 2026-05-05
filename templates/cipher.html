@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ cipher.name }} — CipherVault</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0806;
+    --parchment: #f5ede0;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dark: #8b6914;
+    --crimson: #8b1a1a;
+    --green: #2d6a4f;
+    --shadow: rgba(10,8,6,0.6);
+    --glow: rgba(201,168,76,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9999;
+    mix-blend-mode: screen;
+  }
+  .cursor-ring {
+    width: 40px; height: 40px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9998;
+    transition: width 0.3s, height 0.3s, opacity 0.3s;
+    opacity: 0.5;
+  }
+
+  .bg-grid {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridShift 20s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes gridShift { 100% { transform: translateY(60px); } }
+
+  /* Nav */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, rgba(10,8,6,0.9) 0%, transparent 100%);
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-back {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    opacity: 0.7;
+    text-decoration: none;
+    cursor: none;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-back:hover { opacity: 1; }
+
+  .nav-title {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.85rem;
+    color: var(--gold);
+    opacity: 0.5;
+    letter-spacing: 3px;
+  }
+
+  /* Main layout */
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 120px 40px 80px;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Hero section */
+  .cipher-hero {
+    text-align: center;
+    margin-bottom: 60px;
+    animation: fadeInUp 0.8s ease both;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .cipher-hero-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 20px var(--glow));
+    animation: iconFloat 4s ease-in-out infinite;
+  }
+  @keyframes iconFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .cipher-type-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: 6px 16px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  .cipher-title {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+
+  .cipher-hero-desc {
+    font-size: 1.15rem;
+    font-style: italic;
+    opacity: 0.6;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.8;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 40px 0;
+    opacity: 0.3;
+  }
+
+  /* Main panel */
+  .cipher-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    animation: fadeInUp 0.8s 0.2s ease both;
+  }
+
+  @media (max-width: 768px) {
+    .cipher-panel { grid-template-columns: 1fr; }
+  }
+
+  .panel-box {
+    background: rgba(245,237,224,0.02);
+    border: 1px solid rgba(201,168,76,0.15);
+    padding: 32px;
+    position: relative;
+  }
+
+  .panel-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20px; right: 20px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+
+  .panel-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    opacity: 0.7;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(201,168,76,0.2);
+  }
+
+  /* Mode toggle */
+  .mode-toggle {
+    display: flex;
+    margin-bottom: 28px;
+    border: 1px solid rgba(201,168,76,0.2);
+    overflow: hidden;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: var(--parchment);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mode-btn.active {
+    opacity: 1;
+    color: var(--ink);
+    background: var(--gold);
+  }
+
+  .mode-btn:not(.active):hover { opacity: 0.8; background: rgba(201,168,76,0.1); }
+
+  /* Form elements */
+  .field-group { margin-bottom: 20px; }
+
+  .field-label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    opacity: 0.7;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  textarea, input[type="text"], input[type="number"] {
+    width: 100%;
+    background: rgba(245,237,224,0.03);
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--parchment);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 14px 16px;
+    outline: none;
+    transition: all 0.3s ease;
+    resize: vertical;
+    cursor: none;
+  }
+
+  textarea:focus, input:focus {
+    border-color: rgba(201,168,76,0.6);
+    background: rgba(245,237,224,0.05);
+    box-shadow: 0 0 20px rgba(201,168,76,0.1);
+  }
+
+  textarea { min-height: 140px; }
+
+  .process-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none;
+    color: var(--ink);
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.9rem;
+    letter-spacing: 3px;
+    cursor: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .process-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .process-btn:hover::before { opacity: 1; }
+  .process-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(201,168,76,0.3); }
+  .process-btn:active { transform: translateY(0); }
+
+  .process-btn span { position: relative; z-index: 1; }
+
+  /* Result box */
+  .result-box {
+    position: relative;
+    min-height: 140px;
+    background: rgba(245,237,224,0.02);
+    border: 1px solid rgba(201,168,76,0.15);
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    word-break: break-all;
+    transition: all 0.5s ease;
+  }
+
+  .result-placeholder {
+    color: var(--parchment);
+    opacity: 0.2;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+  }
+
+  .result-text {
+    color: var(--gold-light);
+    animation: revealText 0.5s ease both;
+  }
+
+  @keyframes revealText {
+    from { opacity: 0; letter-spacing: 4px; }
+    to { opacity: 1; letter-spacing: 0; }
+  }
+
+  .result-error {
+    color: #e07070;
+    font-style: italic;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--gold);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 6px 12px;
+    cursor: none;
+    transition: all 0.3s;
+    opacity: 0;
+  }
+  .result-box:hover .copy-btn { opacity: 1; }
+  .copy-btn:hover { background: rgba(201,168,76,0.2); }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .stat-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Animation overlay */
+  .processing-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10,8,6,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 10;
+  }
+  .processing-overlay.active { opacity: 1; pointer-events: all; }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 2px solid rgba(201,168,76,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  /* Info sidebar */
+  .info-section {
+    margin-top: 40px;
+    animation: fadeInUp 0.8s 0.4s ease both;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.1);
+    margin-top: 20px;
+  }
+
+  @media (max-width: 600px) {
+    .info-grid { grid-template-columns: 1fr; }
+  }
+
+  .info-cell {
+    background: var(--ink);
+    padding: 24px;
+    text-align: center;
+  }
+
+  .info-cell-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    opacity: 0.5;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .info-cell-value {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.85rem;
+    color: var(--parchment);
+    opacity: 0.9;
+  }
+
+  /* Character counter animation */
+  .char-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    opacity: 0.4;
+    text-align: right;
+    margin-top: 6px;
+    transition: opacity 0.3s;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 40px; right: 40px;
+    background: var(--gold);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 12px 24px;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+<div class="bg-grid"></div>
+
+<nav>
+  <a href="/" class="nav-back">← BACK TO VAULT</a>
+  <div class="nav-title">CipherVault</div>
+  <div style="width:120px"></div>
+</nav>
+
+<main class="page">
+  <div class="cipher-hero">
+    <span class="cipher-hero-icon">{{ cipher.icon }}</span>
+    <div class="cipher-type-badge">{{ cipher.type }}</div>
+    <h1 class="cipher-title">{{ cipher.name }}</h1>
+    <p class="cipher-hero-desc">{{ cipher.description }}</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="cipher-panel">
+    <!-- Input Panel -->
+    <div class="panel-box">
+      <div class="processing-overlay" id="overlay">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="panel-label">Input</div>
+
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-encode" onclick="setMode('encode')">
+          ⚡ Encode
+        </button>
+        <button class="mode-btn" id="btn-decode" onclick="setMode('decode')">
+          🔓 Decode
+        </button>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Message</label>
+        <textarea id="input-text" placeholder="Enter your message here..."></textarea>
+        <div class="char-counter" id="char-counter">0 characters</div>
+      </div>
+
+      {% for field in cipher.fields %}
+      <div class="field-group">
+        <label class="field-label">{{ field.label }}</label>
+        <input
+          type="{{ field.type }}"
+          id="field-{{ field.name }}"
+          name="{{ field.name }}"
+          value="{{ field.default }}"
+          placeholder="{{ field.placeholder }}"
+        >
+      </div>
+      {% endfor %}
+
+      <button class="process-btn" onclick="process()">
+        <span id="btn-text">✦ Encode Message</span>
+      </button>
+    </div>
+
+    <!-- Output Panel -->
+    <div class="panel-box">
+      <div class="panel-label">Output</div>
+
+      <div class="result-box" id="result-box">
+        <button class="copy-btn" onclick="copyResult()">COPY</button>
+        <div id="result-display">
+          <span class="result-placeholder">Your encrypted / decrypted message will appear here...</span>
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats-row" style="display:none">
+        <div class="stat-chip">◆ <span id="stat-chars">0</span> CHARS</div>
+        <div class="stat-chip">◆ <span id="stat-mode">ENCODED</span></div>
+        <div class="stat-chip">◆ {{ cipher.type | upper }}</div>
+      </div>
+
+      <div class="divider" style="margin:24px 0"></div>
+
+      <div class="panel-label">Quick Reference</div>
+      <div style="font-size:0.9rem; line-height:1.9; opacity:0.5; font-style:italic;">
+        {% if cipher_name == 'caesar' %}
+          Each letter is shifted by the key value. A with key=3 becomes D. The key can be 1–25. Non-alphabetic characters are preserved unchanged.
+        {% elif cipher_name == 'autokey' %}
+          The key is extended using the plaintext itself, making it harder to crack than Vigenère. Encode and decode require the same initial keyword.
+        {% elif cipher_name == 'vigenere' %}
+          A repeating keyword shifts each letter differently. 'KEY' repeats as KEYKEYKEY... against your plaintext for polyalphabetic substitution.
+        {% elif cipher_name == 'railfence' %}
+          Text is written diagonally across N rails then read row by row. More rails = more complex cipher pattern.
+        {% elif cipher_name == 'monoalphabetic' %}
+          Each letter maps to a fixed unique substitute. The alphabet mapping is fixed: a→o, b→z, c→m, etc.
+        {% elif cipher_name == 'playfair' %}
+          Letters are paired and encrypted using a 5×5 Polybius square built from your keyword. J is treated as I.
+        {% elif cipher_name == 'hill' %}
+          Uses matrix multiplication mod 26. Key length must form a perfect square (e.g. 4 chars → 2×2, 9 chars → 3×3).
+        {% elif cipher_name == 'rowtransposition' %}
+          Columns are rearranged according to the alphabetical order of key digits or letters. Key can be numeric or alphabetic.
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <div class="panel-label">Cipher Intelligence</div>
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-cell-label">Algorithm Type</div>
+        <div class="info-cell-value">{{ cipher.type }}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Historical Era</div>
+        <div class="info-cell-value">{{ cipher.era }}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Classification</div>
+        <div class="info-cell-value">{% if 'Transposition' in cipher.type %}Classical{% else %}Substitution{% endif %}</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast">COPIED TO CLIPBOARD</div>
+
+<script>
+// Cursor
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mouseX=0, mouseY=0, ringX=0, ringY=0;
+
+document.addEventListener('mousemove', e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  cursor.style.transform = `translate(${mouseX-6}px, ${mouseY-6}px)`;
+});
+
+(function animateRing() {
+  ringX += (mouseX - ringX - 20) * 0.12;
+  ringY += (mouseY - ringY - 20) * 0.12;
+  ring.style.transform = `translate(${ringX}px, ${ringY}px)`;
+  requestAnimationFrame(animateRing);
+})();
+
+// Interactive elements cursor effect
+document.querySelectorAll('button, input, textarea, a').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    ring.style.width = '60px'; ring.style.height = '60px'; ring.style.opacity = '0.8';
+  });
+  el.addEventListener('mouseleave', () => {
+    ring.style.width = '40px'; ring.style.height = '40px'; ring.style.opacity = '0.5';
+  });
+});
+
+// State
+let currentMode = 'encode';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('btn-encode').classList.toggle('active', mode === 'encode');
+  document.getElementById('btn-decode').classList.toggle('active', mode === 'decode');
+  document.getElementById('btn-text').textContent = mode === 'encode' ? '✦ Encode Message' : '✦ Decode Message';
+}
+
+// Char counter
+document.getElementById('input-text').addEventListener('input', function() {
+  document.getElementById('char-counter').textContent = this.value.length + ' characters';
+});
+
+async function process() {
+  const text = document.getElementById('input-text').value.trim();
+  if (!text) return;
+
+  const overlay = document.getElementById('overlay');
+  overlay.classList.add('active');
+
+  const payload = {
+    cipher: '{{ cipher_name }}',
+    mode: currentMode,
+    text: text,
+  };
+
+  // Collect extra fields
+  {% for field in cipher.fields %}
+  payload['{{ field.name }}'] = document.getElementById('field-{{ field.name }}').value;
+  {% endfor %}
+
+  try {
+    const res = await fetch('/api/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    overlay.classList.remove('active');
+
+    const display = document.getElementById('result-display');
+    const statsRow = document.getElementById('stats-row');
+
+    if (data.success) {
+      display.innerHTML = `<span class="result-text">${escapeHtml(data.result)}</span>`;
+      statsRow.style.display = 'flex';
+      document.getElementById('stat-chars').textContent = data.result.length;
+      document.getElementById('stat-mode').textContent = currentMode.toUpperCase() + 'D';
+    } else {
+      display.innerHTML = `<span class="result-error">⚠ Error: ${escapeHtml(data.error)}</span>`;
+      statsRow.style.display = 'none';
+    }
+  } catch(e) {
+    overlay.classList.remove('active');
+    document.getElementById('result-display').innerHTML = `<span class="result-error">⚠ Connection error. Is the server running?</span>`;
+  }
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function copyResult() {
+  const text = document.getElementById('result-display').textContent.trim();
+  if (!text || text.includes('appear here')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') process();
+});
+</script>
+</body>
+</html>
