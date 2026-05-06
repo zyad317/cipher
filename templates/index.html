@@ -6,516 +6,428 @@
 <title>CipherLab — Classical Cryptography Suite</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=JetBrains+Mono:wght@300;400;700&family=Plus+Jakarta+Sans:wght@300;500;800&display=swap');
+
   :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a24;
-    --border: #2a2a3a;
-    --accent: #00ffc8;
-    --accent2: #7b5ea7;
-    --accent3: #ff6b35;
-    --text: #e8e8f0;
-    --muted: #6a6a8a;
-    --mono: 'Share Tech Mono', monospace;
-    --display: 'Bebas Neue', sans-serif;
-    --body: 'DM Sans', sans-serif;
+    --bg: #050508;
+    --side-bg: #08080c;
+    --accent: #00f2ff;
+    --accent-glow: rgba(0, 242, 255, 0.4);
+    --accent2: #7d2ae8;
+    --accent2-glow: rgba(125, 42, 232, 0.4);
+    --text: #ffffff;
+    --text-dim: #808090;
+    --border: rgba(255, 255, 255, 0.05);
+    --glass: blur(25px) saturate(180%);
+    --font-display: 'Syncopate', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
 
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: var(--body);
-    min-height: 100vh;
-    overflow-x: hidden;
+    font-family: var(--font-body);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
   }
 
-  /* Animated grid background */
-  body::before {
-    content: '';
+  /* Custom Cursor */
+  #cursor {
+    width: 20px; height: 20px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 10000;
+    transition: transform 0.1s ease;
+    mix-blend-mode: difference;
+  }
+
+  /* Dynamic Background */
+  .bg-animation {
     position: fixed;
     inset: 0;
-    background-image:
-      linear-gradient(rgba(0,255,200,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,255,200,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Glow orb */
-  body::after {
-    content: '';
-    position: fixed;
-    top: -200px;
-    right: -200px;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(123,94,167,0.12) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container {
-    position: relative;
-    z-index: 1;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-
-  /* Header */
-  header {
-    padding: 40px 0 20px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 48px;
-  }
-
-  .header-inner {
-    display: flex;
-    align-items: flex-end;
-    gap: 20px;
-  }
-
-  .logo {
-    font-family: var(--display);
-    font-size: 64px;
-    letter-spacing: 4px;
-    line-height: 1;
-    color: var(--accent);
-    text-shadow: 0 0 40px rgba(0,255,200,0.3);
-  }
-
-  .logo span {
-    color: var(--text);
-    opacity: 0.3;
-  }
-
-  .tagline {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding-bottom: 8px;
-  }
-
-  /* Algorithm selector */
-  .algo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 8px;
-    margin-bottom: 40px;
-  }
-
-  .algo-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 12px 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-    position: relative;
+    z-index: -1;
     overflow: hidden;
   }
 
-  .algo-btn::before {
-    content: '';
+  .bg-circle {
     position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    opacity: 0;
-    transition: opacity 0.2s;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--accent2-glow) 0%, transparent 70%);
+    filter: blur(100px);
+    animation: orbit 30s linear infinite;
   }
 
-  .algo-btn span { position: relative; z-index: 1; }
-
-  .algo-btn:hover {
-    border-color: var(--accent);
-    color: var(--text);
+  @keyframes orbit {
+    0% { transform: translate(-50%, -50%) rotate(0deg) translateX(200px) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg) translateX(200px) rotate(-360deg); }
   }
 
-  .algo-btn:hover::before { opacity: 0.08; }
-
-  .algo-btn.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(0,255,200,0.05);
+  /* Layout Structure */
+  .sidebar {
+    width: 320px;
+    background: var(--side-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 40px 0;
+    z-index: 10;
   }
 
-  .algo-btn.active::before { opacity: 0.1; }
-
-  /* Section label */
-  .section-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-  }
-
-  /* Main panel */
-  .panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 32px;
-    margin-bottom: 24px;
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 60px;
     position: relative;
   }
 
-  .panel::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
+  /* Sidebar Branding */
+  .brand {
+    padding: 0 30px 40px;
+    border-bottom: 1px solid var(--border);
   }
 
-  .panel-title {
-    font-family: var(--display);
-    font-size: 28px;
+  .brand h1 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+
+  .brand p {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* Algorithm Menu */
+  .menu-label {
+    padding: 30px 30px 15px;
+    font-size: 10px;
+    text-transform: uppercase;
     letter-spacing: 3px;
-    color: var(--text);
-    margin-bottom: 6px;
+    color: var(--text-dim);
+    font-weight: 800;
   }
 
-  .panel-desc {
+  .algo-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 15px;
+  }
+
+  .algo-item {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 18px 20px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-weight: 600;
     font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 28px;
-    line-height: 1.6;
+    text-align: left;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Form elements */
-  .form-row {
+  .algo-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    padding-left: 25px;
+  }
+
+  .algo-item.active {
+    background: linear-gradient(90deg, rgba(0, 242, 255, 0.1), transparent);
+    color: var(--accent);
+    border-left: 3px solid var(--accent);
+    padding-left: 25px;
+  }
+
+  .algo-icon {
+    width: 32px; height: 32px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: 0.3s;
+  }
+
+  .algo-item.active .algo-icon {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 0 0 15px var(--accent-glow);
+  }
+
+  /* Main Area Styling */
+  .header-area {
+    margin-bottom: 50px;
+  }
+
+  .algo-badge {
+    display: inline-block;
+    padding: 6px 15px;
+    background: rgba(0, 242, 255, 0.1);
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  .main-title {
+    font-family: var(--font-display);
+    font-size: 40px;
+    margin-bottom: 15px;
+    background: linear-gradient(to right, #fff, #a0a0ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .main-desc {
+    font-size: 16px;
+    color: var(--text-dim);
+    max-width: 700px;
+    line-height: 1.8;
+  }
+
+  /* Workstation Panel */
+  .workstation {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 30px;
   }
 
-  .form-row.single { grid-template-columns: 1fr; }
-  .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+  .panel-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    backdrop-filter: var(--glass);
+  }
 
-  .form-group {
+  .input-section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 30px;
   }
 
-  label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 2px;
+  .form-group label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
     text-transform: uppercase;
-    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    display: block;
   }
 
-  textarea, input[type="text"], input[type="number"] {
-    background: var(--bg);
+  textarea, input {
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 14px;
-    padding: 12px 16px;
-    outline: none;
-    transition: border-color 0.2s;
+    border-radius: 16px;
+    color: #fff;
+    padding: 20px;
     width: 100%;
-    resize: vertical;
+    font-family: var(--font-body);
+    font-size: 15px;
+    transition: 0.3s;
   }
-
-  textarea { min-height: 100px; }
 
   textarea:focus, input:focus {
+    outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 1px rgba(0,255,200,0.1);
+    background: rgba(255, 255, 255, 0.05);
   }
 
-  /* Mode toggle */
-  .mode-toggle {
+  .mode-switch {
     display: flex;
-    gap: 0;
-    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 6px;
+    border-radius: 14px;
+    gap: 5px;
   }
 
   .mode-btn {
     flex: 1;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    background: transparent;
+    border: none;
     padding: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
+    border-radius: 10px;
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 12px;
+    cursor: none;
+    transition: 0.3s;
   }
-
-  .mode-btn:first-child { border-right: none; }
 
   .mode-btn.active {
-    background: rgba(0,255,200,0.1);
-    color: var(--accent);
-    border-color: var(--accent);
-  }
-
-  /* Execute button */
-  .execute-btn {
-    background: var(--accent);
-    border: none;
-    color: #000;
-    font-family: var(--display);
-    font-size: 20px;
-    letter-spacing: 3px;
-    padding: 16px 40px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 8px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .execute-btn:hover {
     background: #fff;
-    box-shadow: 0 0 30px rgba(0,255,200,0.4);
-    transform: translateY(-1px);
+    color: #000;
   }
 
-  .execute-btn:active { transform: translateY(0); }
-
-  .execute-btn.loading {
-    pointer-events: none;
-    opacity: 0.7;
+  .run-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 22px;
+    border-radius: 18px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-top: 20px;
+    transition: all 0.4s;
   }
 
-  /* Output panel */
-  .output-panel {
-    background: var(--bg);
+  .run-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 242, 255, 0.2);
+  }
+
+  /* Output Screen */
+  .output-screen {
+    background: #000;
+    border-radius: 20px;
+    padding: 30px;
+    height: 100%;
     border: 1px solid var(--border);
-    padding: 24px;
-    margin-top: 24px;
-    min-height: 80px;
-    position: relative;
-    transition: all 0.3s;
-  }
-
-  .output-panel.has-result { border-color: rgba(0,255,200,0.3); }
-
-  .output-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 12px;
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
   }
 
-  .output-label::after {
-    content: '';
+  .screen-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .screen-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #333;
+  }
+
+  .output-content {
     flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  .output-text {
-    font-family: var(--mono);
-    font-size: 16px;
+    font-family: var(--font-mono);
+    font-size: 18px;
     color: var(--accent);
-    word-break: break-all;
     line-height: 1.6;
-    min-height: 24px;
+    overflow-wrap: break-word;
   }
-
-  .output-text.error { color: var(--accent3); }
 
   .copy-btn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: var(--surface2);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 1px;
-    padding: 6px 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    margin-top: 20px;
     display: none;
   }
 
-  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
   .copy-btn.show { display: block; }
 
-  /* Info tags */
-  .info-tags {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 16px;
-  }
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
-  .tag {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 1px;
-    padding: 4px 10px;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  .tag.type-symmetric { border-color: rgba(0,255,200,0.3); color: var(--accent); }
-  .tag.type-classical { border-color: rgba(123,94,167,0.4); color: var(--accent2); }
-  .tag.type-transposition { border-color: rgba(255,107,53,0.4); color: var(--accent3); }
-
-  /* Spinner */
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner {
-    display: inline-block;
-    width: 12px; height: 12px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-    vertical-align: middle;
-    margin-left: 8px;
-  }
-
-  /* Scanline animation */
-  @keyframes scanline {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100vh); }
-  }
-
-  .output-panel::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(0,255,200,0.15), transparent);
-    animation: scanline 3s linear infinite;
-    pointer-events: none;
-  }
-
-  /* Algo info */
-  .algo-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    margin-bottom: 40px;
-  }
-
-  .info-cell {
-    background: var(--surface);
-    padding: 16px 20px;
-  }
-
-  .info-cell-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .info-cell-value {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 24px 0;
-    margin-top: 60px;
-    text-align: center;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 2px;
-  }
-
-  @media (max-width: 640px) {
-    .form-row, .form-row.triple { grid-template-columns: 1fr; }
-    .logo { font-size: 42px; }
-    .algo-grid { grid-template-columns: repeat(3, 1fr); }
-    .algo-info { grid-template-columns: 1fr; }
+  @media (max-width: 1100px) {
+    .workstation { grid-template-columns: 1fr; }
+    .sidebar { width: 80px; }
+    .brand, .menu-label, .algo-item span { display: none; }
+    .algo-item { justify-content: center; padding: 15px; }
   }
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <div class="header-inner">
-      <div class="logo">CIPHER<span>LAB</span></div>
-      <div class="tagline">// Classical Cryptography Suite — 9 Algorithms</div>
-    </div>
-  </header>
+<div id="cursor"></div>
+<div class="bg-animation">
+  <div class="bg-circle" style="top: 20%; left: 30%;"></div>
+  <div class="bg-circle" style="top: 70%; left: 80%; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);"></div>
+</div>
 
-  <div class="section-label">// Select Algorithm</div>
-  <div class="algo-grid">
-    <button class="algo-btn active" data-algo="caesar" onclick="selectAlgo(this)"><span>Caesar</span></button>
-    <button class="algo-btn" data-algo="autokey" onclick="selectAlgo(this)"><span>Auto Key</span></button>
-    <button class="algo-btn" data-algo="vigenere" onclick="selectAlgo(this)"><span>Vigenère</span></button>
-    <button class="algo-btn" data-algo="playfair" onclick="selectAlgo(this)"><span>Playfair</span></button>
-    <button class="algo-btn" data-algo="hill" onclick="selectAlgo(this)"><span>Hill Cipher</span></button>
-    <button class="algo-btn" data-algo="monoalphabetic" onclick="selectAlgo(this)"><span>Monoalpha</span></button>
-    <button class="algo-btn" data-algo="railfence" onclick="selectAlgo(this)"><span>Rail Fence</span></button>
-    <button class="algo-btn" data-algo="rowtransposition" onclick="selectAlgo(this)"><span>Row Transpos.</span></button>
-    <button class="algo-btn" data-algo="des" onclick="selectAlgo(this)"><span>DES</span></button>
+<aside class="sidebar">
+  <div class="brand">
+    <h1>CIPHERLAB</h1>
+    <p>Quantum-Safe Protocol V2.0</p>
+  </div>
+  
+  <div class="menu-label">Algorithms</div>
+  <nav class="algo-list" id="algo-menu">
+    <!-- Will be populated by JS -->
+  </nav>
+</aside>
+
+<main class="main-content">
+  <div class="header-area animate-in">
+    <span class="algo-badge" id="algo-type-badge">SUBSTITUTION_MODE</span>
+    <h2 class="main-title" id="algo-title">CAESAR CIPHER</h2>
+    <p class="main-desc" id="algo-desc">Shifts each letter by a fixed number of positions in the alphabet. Simple but iconic.</p>
   </div>
 
-  <div class="panel">
-    <div class="panel-title" id="algo-title">CAESAR CIPHER</div>
-    <div class="panel-desc" id="algo-desc">Shifts each letter by a fixed number of positions in the alphabet. One of the oldest and simplest substitution ciphers.</div>
+  <div class="workstation">
+    <div class="panel-card animate-in" style="animation-delay: 0.1s;">
+      <div class="input-section">
+        <div class="form-group">
+          <label>Operational Mode</label>
+          <div class="mode-switch">
+            <button class="mode-btn active" id="mode-encode" onclick="setMode('encode')">ENCRYPT</button>
+            <button class="mode-btn" id="mode-decode" onclick="setMode('decode')">DECRYPT</button>
+          </div>
+        </div>
 
-    <!-- Mode toggle -->
-    <div class="mode-toggle">
-      <button class="mode-btn active" id="mode-encode" onclick="setMode('encode')">// ENCODE</button>
-      <button class="mode-btn" id="mode-decode" onclick="setMode('decode')">// DECODE</button>
-    </div>
+        <div id="fields-container"></div>
 
-    <!-- Dynamic fields -->
-    <div id="fields-container"></div>
+        <div class="form-group">
+          <label>Raw Input Stream</label>
+          <textarea id="input-text" placeholder="Enter plaintext..." rows="5"></textarea>
+        </div>
 
-    <!-- Input text -->
-    <div class="form-row single" style="margin-bottom:16px;">
-      <div class="form-group">
-        <label>Input Text</label>
-        <textarea id="input-text" placeholder="Enter your message here..."></textarea>
+        <button class="run-btn" id="exec-btn" onclick="execute()">INITIATE_PROCESS</button>
       </div>
     </div>
 
-    <button class="execute-btn" id="exec-btn" onclick="execute()">EXECUTE</button>
-
-    <!-- Output -->
-    <div class="output-panel" id="output-panel">
-      <div class="output-label">Output</div>
-      <div class="output-text" id="output-text">Awaiting input...</div>
-      <button class="copy-btn" id="copy-btn" onclick="copyResult()">Copy</button>
+    <div class="panel-card animate-in" style="animation-delay: 0.2s; padding: 10px;">
+      <div class="output-screen">
+        <div class="screen-header">
+          <div style="display: flex; gap: 8px;">
+            <div class="screen-dot" style="background: #ff5f56;"></div>
+            <div class="screen-dot" style="background: #ffbd2e;"></div>
+            <div class="screen-dot" style="background: #27c93f;"></div>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 10px; color: #444;">TERMINAL_V2.0</div>
+        </div>
+        <div class="output-content" id="output-text">SYSTEM READY. AWAITING PLAINTEXT...</div>
+        <button class="copy-btn" id="copy-btn" onclick="copyResult()">COPY_OUTPUT</button>
+      </div>
     </div>
-
-    <div class="info-tags" id="info-tags"></div>
   </div>
-
-  <footer>CIPHERLAB &mdash; CRYPTOGRAPHY SUITE &mdash; ALL ALGORITHMS IMPLEMENTED IN PYTHON</footer>
-</div>
+</main>
 
 <script>
 const ALGOS = {
@@ -613,8 +525,19 @@ const ALGOS = {
 let currentAlgo = 'caesar';
 let currentMode = 'encode';
 
+// Populate Sidebar
+function initMenu() {
+  const menu = document.getElementById('algo-menu');
+  menu.innerHTML = Object.entries(ALGOS).map(([id, algo]) => `
+    <button class="algo-item ${id === currentAlgo ? 'active' : ''}" data-algo="${id}" onclick="selectAlgo(this)">
+      <div class="algo-icon">${id.charAt(0).toUpperCase()}</div>
+      <span>${algo.title.split(' ')[0]}</span>
+    </button>
+  `).join('');
+}
+
 function selectAlgo(btn) {
-  document.querySelectorAll('.algo-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.algo-item').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentAlgo = btn.dataset.algo;
   renderAlgo();
@@ -628,15 +551,37 @@ function setMode(mode) {
 
 function renderAlgo() {
   const algo = ALGOS[currentAlgo];
-  document.getElementById('algo-title').textContent = algo.title;
-  document.getElementById('algo-desc').textContent = algo.desc;
+  const titleEl = document.getElementById('algo-title');
+  const descEl = document.getElementById('algo-desc');
+  const badgeEl = document.getElementById('algo-type-badge');
+  const outputText = document.getElementById('output-text');
+  const copyBtn = document.getElementById('copy-btn');
 
-  // Tags
-  const tagMap = { classical: 'type-classical', symmetric: 'type-symmetric', transposition: 'type-transposition' };
-  document.getElementById('info-tags').innerHTML = `
-    <span class="tag ${tagMap[algo.type] || ''}">${algo.typeLabel}</span>
-    ${algo.modeNote ? `<span class="tag">${algo.modeNote}</span>` : ''}
-  `;
+  // Reset Output Screen
+  outputText.textContent = 'SYSTEM READY. AWAITING PLAINTEXT...';
+  outputText.style.color = 'var(--accent)';
+  copyBtn.className = 'copy-btn';
+
+  // Clear Input Stream
+  document.getElementById('input-text').value = '';
+
+  // Smooth transition
+  [titleEl, descEl].forEach(el => {
+    el.style.opacity = 0;
+    el.style.transform = 'translateY(10px)';
+  });
+
+  setTimeout(() => {
+    titleEl.textContent = algo.title;
+    descEl.textContent = algo.desc;
+    badgeEl.textContent = algo.typeLabel.toUpperCase() + '_MODE';
+    
+    [titleEl, descEl].forEach(el => {
+      el.style.opacity = 1;
+      el.style.transform = 'translateY(0)';
+      el.style.transition = '0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+    });
+  }, 200);
 
   // Fields
   const container = document.getElementById('fields-container');
@@ -644,24 +589,21 @@ function renderAlgo() {
     container.innerHTML = '';
     return;
   }
-  container.innerHTML = `<div class="form-row" style="margin-bottom:16px;">
-    ${algo.fields.map(f => `
-      <div class="form-group">
-        <label>${f.label}</label>
-        <input type="${f.type}" id="field-${f.id}" placeholder="${f.placeholder}" value="${f.default}">
-      </div>
-    `).join('')}
-  </div>`;
+  container.innerHTML = algo.fields.map(f => `
+    <div class="form-group">
+      <label>${f.label}</label>
+      <input type="${f.type}" id="field-${f.id}" placeholder="${f.placeholder}" value="${f.default}">
+    </div>
+  `).join('');
 }
 
 async function execute() {
   const algo = ALGOS[currentAlgo];
   const text = document.getElementById('input-text').value.trim();
-  if (!text) { showOutput('Please enter some text.', true); return; }
+  if (!text) { showOutput('SYSTEM_ALERT: Plaintext required.', true); return; }
 
   const payload = { algorithm: currentAlgo, mode: currentMode, text, key: '', extra: {} };
 
-  // Collect fields
   algo.fields.forEach(f => {
     const val = document.getElementById(`field-${f.id}`)?.value || f.default;
     if (f.extra) payload.extra[f.id] = val;
@@ -670,7 +612,7 @@ async function execute() {
 
   const btn = document.getElementById('exec-btn');
   btn.classList.add('loading');
-  btn.innerHTML = 'PROCESSING <span class="spinner"></span>';
+  btn.innerHTML = 'PROCESSING...';
 
   try {
     const res = await fetch('/api/cipher', {
@@ -679,41 +621,56 @@ async function execute() {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (data.error) showOutput('ERROR: ' + data.error, true);
+    if (data.error) showOutput('PROCESS_FAILED: ' + data.error, true);
     else showOutput(data.result, false);
   } catch (e) {
-    showOutput('Connection error: ' + e.message, true);
+    showOutput('COMMS_FAILURE: ' + e.message, true);
   } finally {
     btn.classList.remove('loading');
-    btn.innerHTML = 'EXECUTE';
+    btn.innerHTML = 'INITIATE_PROCESS';
   }
 }
 
 function showOutput(text, isError) {
   const out = document.getElementById('output-text');
-  const panel = document.getElementById('output-panel');
   const copyBtn = document.getElementById('copy-btn');
-  out.textContent = text;
-  out.className = 'output-text' + (isError ? ' error' : '');
-  panel.className = 'output-panel' + (!isError ? ' has-result' : '');
+  
+  out.innerHTML = '';
+  const prefix = isError ? '![ERROR]: ' : 'CIPHER: ';
+  const fullText = prefix + text;
+  
+  let i = 0;
+  function typeWriter() {
+    if (i < fullText.length) {
+      out.innerHTML += fullText.charAt(i);
+      i++;
+      setTimeout(typeWriter, 10);
+    }
+  }
+  typeWriter();
+
+  out.style.color = isError ? '#ff5f56' : 'var(--accent)';
   copyBtn.className = 'copy-btn' + (!isError ? ' show' : '');
 }
 
 function copyResult() {
-  const text = document.getElementById('output-text').textContent;
+  const text = document.getElementById('output-text').textContent.replace('CIPHER: ', '');
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copy-btn');
-    btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Copy', 1500);
+    btn.textContent = 'COPIED_SUCCESS';
+    setTimeout(() => btn.textContent = 'COPY_OUTPUT', 1500);
   });
 }
 
-// Allow Ctrl+Enter to execute
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') execute();
+// Cursor Follower
+document.addEventListener('mousemove', e => {
+  const cursor = document.getElementById('cursor');
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
 });
 
 // Init
+initMenu();
 renderAlgo();
 </script>
 </body>
